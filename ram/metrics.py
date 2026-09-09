@@ -115,13 +115,13 @@ def counts_to_rates(tp: Float[Tensor, "n_morphs"],
     Returns:
         True positive rate, false negative rate, false positive rate, true negative rate.
     """
-    p_total = torch.clamp(tp + fn, min=1.0)
-    n_total = torch.clamp(fp + tn, min=1.0)
+    p_total = tp + fn
+    n_total = fp + tn
 
-    tpr = (tp / p_total) * 100
-    fnr = (fn / p_total) * 100
-    fpr = (fp / n_total) * 100
-    tnr = (tn / n_total) * 100
+    tpr = torch.where(p_total > 0, tp / p_total.clamp(min=1.0), torch.nan) * 100
+    fnr = torch.where(p_total > 0, fn / p_total.clamp(min=1.0), torch.nan) * 100
+    fpr = torch.where(n_total > 0, fp / n_total.clamp(min=1.0), torch.nan) * 100
+    tnr = torch.where(n_total > 0, tn / n_total.clamp(min=1.0), torch.nan) * 100
     return tpr, fnr, fpr, tnr
 
 
@@ -155,14 +155,14 @@ def bootstrap_mean_ci(trajectories: Float[Tensor, "n_trajectories n_timepoints"]
     )
 
     bootstrap_samples = trajectories[boot_indices]
-    bootstrap_means = torch.mean(bootstrap_samples, dim=1)
-    mean_trajectory = torch.mean(trajectories, dim=0)
+    bootstrap_means = torch.nanmean(bootstrap_samples, dim=1)
+    mean_trajectory = torch.nanmean(trajectories, dim=0)
 
     lower_percentile = ((100 - ci) / 2) / 100
     upper_percentile = (100 - (100 - ci) / 2) / 100
 
     quantiles = torch.tensor([lower_percentile, upper_percentile], device=trajectories.device)
-    ci_bounds = torch.quantile(bootstrap_means, quantiles, dim=0)
+    ci_bounds = torch.nanquantile(bootstrap_means, quantiles, dim=0)
 
     # Basic (reverse-percentile) bootstrap: reflect quantiles around the observed mean
     ci_lower = 2 * mean_trajectory - ci_bounds[1]
