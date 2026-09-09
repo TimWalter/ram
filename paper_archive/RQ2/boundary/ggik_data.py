@@ -1,0 +1,68 @@
+import pickle
+from pathlib import Path
+
+import torch
+from tqdm import tqdm
+
+from liegroups.numpy import SE3
+from graphik.robots import RobotRevolute
+from graphik.graphs.graph_revolute import ProblemGraphRevolute
+from paper_archive.RQ2.representation_accuracy.generative_graphik.generative_graphik.utils.dataset_generation import \
+    generate_struct_data, generate_data_point_from_pose
+
+import ram.dataset.se3 as se3
+from ram.dataset.loader import HomogeneousPoseSet
+
+device = torch.device("cuda")
+eval_set = HomogeneousPoseSet(1, False, "boundary/test", device)
+
+robots = []
+graphs = []
+struct_data = []
+for morph_idx in tqdm(range(len(eval_set.morphologies)), "To graph"):
+    morph = eval_set.morphologies[morph_idx]
+    dofp1 = (morph.abs().sum(dim=1) != 0).sum().item()
+    morph = morph[:dofp1]
+
+    params = {
+        "alpha": morph[:, 0].tolist(),
+        "a": morph[:, 1].tolist(),
+        "d": morph[:, 2].tolist(),
+        "theta": [0] * morph.shape[0],
+        "num_joints": morph.shape[0],
+        "modified_dh": True,
+    }
+
+    robots += [RobotRevolute(params)]
+    graphs += [ProblemGraphRevolute(robots[-1])]
+    struct_data += [generate_struct_data(graphs[-1])]
+
+directory = Path(__file__).parent / "cache" / "test"
+directory.mkdir(parents=True, exist_ok=True)
+pickle.dump(graphs, open(directory / "graphs.pickle", "wb"))
+
+data = []
+label_buffer = []
+
+morph_indices = []
+pose_buffer = []
+morph_count = torch.zeros(len(graphs), dtype=torch.int)
+
+eval_set = HomogeneousPoseSet(1000, False, "boundary/test", device)
+for batch_idx, (morph, pose, label, morph_idx) in enumerate(tqdm(eval_set, desc="boundary/test")):
+    for inner_idx, (mi, p, l) in enumerate(zip(morph_idx, pose, label)):
+        if morph_count[mi] >= 1000:
+            continue
+        morph_indices += [mi]
+        data += [generate_data_point_from_pose(graphs[mi],
+                                               SE3.from_matrix(se3.from_vector(p).cpu().numpy(), normalize=True),
+                                               struct_data[mi])]
+        pose_buffer += [p]
+        label_buffer += [l]
+        morph_count[mi] += 1
+
+torch.save(torch.tensor(morph_indices), directory / "morph_indices.pth")
+torch.save(torch.stack(pose_buffer), directory / "poses.pth")
+
+torch.save(torch.tensor(label_buffer), directory / "labels.pth")
+pickle.dump(data, open(directory / "data.pickle", "wb"))
