@@ -19,6 +19,7 @@ from ram.dataset.morphology import get_joint_limits
 
 torch.set_float32_matmul_precision("high")
 
+
 @jaxtyped(typechecker=beartype)
 @torch.compile
 def sample_workspace(morph: Float[Tensor, "*batch dof 3"], joint_limits: Float[Tensor, "*batch dof 2"]) \
@@ -51,7 +52,7 @@ def sample_workspace(morph: Float[Tensor, "*batch dof 3"], joint_limits: Float[T
 def fk_approximation(morph: Float[Tensor, "dofp1 3"],
                      debug: bool = False, seconds: int = 60,
                      batch_size: int | None = None) -> \
-        Int64[Tensor, "num_samples"] | tuple[Int64[Tensor, "num_samples"], tuple[int, int, float, float, float], int]:
+        Int64[Tensor, "num_samples"] | tuple[Int64[Tensor, "num_samples"], tuple[int, float, float, float], int]:
     """
     Estimat the workspace using only forward kinematics, a discretisation of SE(3) and the closed world assumption.
     Fill up the discretised cells using FK until convergence. All unfilled cells are assumed to be unreachable.
@@ -111,8 +112,7 @@ def fk_approximation(morph: Float[Tensor, "dofp1 3"],
         total_efficiency = filled_cells / total_samples * 100
         unique_efficiency = filled_cells / collision_free_samples * 100
         collision_efficiency = collision_free_samples / total_samples * 100
-        return indices, (filled_cells, total_samples, total_efficiency, unique_efficiency,
-                         collision_efficiency), batch_size
+        return indices, (total_samples, total_efficiency, unique_efficiency, collision_efficiency), batch_size
     return indices
 
 
@@ -201,23 +201,3 @@ def synthesise_data(morph: Float[Tensor, "dofp1 3"],
         labels[:subsamples] = True
 
     return cell_indices if not return_poses else poses.cpu(), labels
-
-
-if __name__ == "__main__":
-    from ram.dataset.morphology import sample_morph
-
-    torch.manual_seed(1)
-    morphs = sample_morph(10, 6, True, torch.device("cuda"))
-    benchmarks = []
-    for morph in morphs:
-        morph = morph.to("cuda")
-        _, benchmark = fk_approximation(morph, True)
-        benchmarks += [torch.tensor(benchmark)]
-
-    mean_benchmark = torch.stack(benchmarks).mean(dim=0, keepdim=True).tolist()
-    mean_benchmark[0][0] = int(mean_benchmark[0][0])
-    mean_benchmark[0][1] = int(mean_benchmark[0][1])
-    print(tabulate(mean_benchmark,
-                   headers=["Filled Cells", "Total Samples<br>(Speed)", "Efficiency<br>(Total)",
-                            "Efficiency<br>(Unique)",
-                            "Efficiency<br>(Collision)"], floatfmt=".4f", intfmt=",", tablefmt="github"))
