@@ -27,7 +27,8 @@ dependencies = [
     "optimistix",
     "optax",
     "cmaes>=0.11.1",
-    "huggingface_hub>=1.28.0"
+    "huggingface_hub>=1.28.0",
+    "safetensors>=0.8.0"
 ]
 
 [tool.ruff]

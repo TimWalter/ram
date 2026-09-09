@@ -21,7 +21,14 @@ def latex_mean_and_ci(mean: float | Float[Tensor, ""] | Float[Tensor, "1"],
                       lower: float | Float[Tensor, ""] | Float[Tensor, "1"],
                       upper: float | Float[Tensor, ""] | Float[Tensor, "1"],
                       decimals: int = 2) -> str:
-    return rf"\num{{{int(round(float(mean), ndigits=decimals))}({int(round(float(upper - mean), ndigits=decimals))}:{int(round(float(mean - lower), ndigits=decimals))})}}"
+    mean = round(float(mean), ndigits=decimals)
+    upper = round(float(upper - mean), ndigits=decimals)
+    lower = round(float(mean - lower), ndigits=decimals)
+    if decimals == 0:
+        mean = int(mean)
+        upper = int(upper)
+        lower = int(lower)
+    return rf"\num{{{mean}({upper}:{lower})}}"
 
 
 @jaxtyped(typechecker=beartype)

@@ -91,3 +91,9 @@ class Model(nn.Module,
         Forward with inference mode
         """
         return self.forward(*args, **kwargs)
+
+
+if __name__ == "__main__":
+    model = Model.from_id(2069)
+    model.save_pretrained("RAM")
+    model.push_to_hub("TimWalter/RAM")
