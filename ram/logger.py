@@ -139,12 +139,9 @@ class Logger:
         self.buffer["loss"] += loss
 
     @jaxtyped(typechecker=beartype)
-    def aggregate_validation(self, boundary: bool) -> float:
+    def aggregate_validation(self) -> float:
         """
         Aggregate validation steps and post to W&B.
-
-        Args:
-            boundary: Whether we evaluated random or boundary samples.
 
         Returns:
             Mean balanced accuracy.
@@ -157,7 +154,7 @@ class Logger:
         data |= {"Loss": self.buffer["loss"] / logit.shape[0]}
 
         output = data["Balanced Accuracy (Mean)"]
-        data = self.assign_space(data, "Boundary" if boundary else "Validation")
+        data = self.assign_space(data, "Validation")
         self.run.log(data=data, commit=False)
         self.buffer = {}
         return output

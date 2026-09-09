@@ -30,7 +30,8 @@ def validation(model: Model, logger: Logger, validation_set: HomogeneousPoseSet,
         loss += loss_function(logit, label.float())
         logger.log_validation(morph_index, label, logit, loss)
     loss /= len(validation_set)
-    return loss.cpu().item()
+    metric = logger.aggregate_validation()
+    return metric
 
 
 def train(training_set_path: str,
@@ -76,7 +77,6 @@ def train(training_set_path: str,
     training_set = IndexedCellSet(batch_size, True, training_set_path, device)
     if validation_set_path is not None:
         validation_set = HomogeneousPoseSet(batch_size, False, validation_set_path, device)
-        boundary_set = HomogeneousPoseSet(batch_size, False, validation_set.path + "_boundary", device)
 
     loss_function = torch.nn.BCEWithLogitsLoss(reduction='mean')
     max_metric = -torch.inf
@@ -101,10 +101,7 @@ def train(training_set_path: str,
             if validation_set_path is not None and batch_idx % validation_interval == 0:
                 logger.checkpoint()
                 with torch.no_grad():
-                    validation(model, logger, boundary_set, loss_function)
-                    logger.aggregate_validation(True)
-                    validation(model, logger, validation_set, loss_function)
-                    metric = logger.aggregate_validation(False)
+                    metric = validation(model, logger, validation_set, loss_function)
                     if metric > max_metric:
                         max_metric = metric
                         early_stopping_counter = 0
