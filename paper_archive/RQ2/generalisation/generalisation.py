@@ -38,7 +38,7 @@ for run in test_runs:
         metrics += [latex_mean_and_ci(
             run.summary.get(f"Validation/{metric} (Mean)"),
             run.summary.get(f"Validation/{metric} (CI Lower)"),
-            run.summary.get(f"Validation/{metric} (CI Upper)")
+            run.summary.get(f"Validation/{metric} (CI Upper)"), decimals=0
         )]
     metrics_list += [metrics]
     created += [datetime.fromisoformat(run.createdAt)]
@@ -71,13 +71,12 @@ print(r"""
 for dof in range(1, 10):
     if dof == 5:
         print(r"\midrule")
-    print(rf"{dof} DoF".join(f"& {m}" for m in metrics[dof]) + r"\\")
+    print(f"{dof} DoF & " + " & ".join(metrics[dof]) + r"\\")
     if dof == 7:
         print(r"\midrule")
 print(r"\midrule")
-print(rf"Spherical Wrist".join(f"& {m}" for m in metrics[10]) + r"\\")
-print(r"""
-        \bottomrule
+print("Spherical Wrist & " + " & ".join(metrics[10]) + r"\\")
+print(r"""\bottomrule
     \end{talltblr}
 \end{table}
 """)
