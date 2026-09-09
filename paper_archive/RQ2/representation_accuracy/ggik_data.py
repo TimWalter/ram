@@ -14,56 +14,56 @@ import ram.dataset.se3 as se3
 from ram.dataset.loader import HomogeneousPoseSet
 
 device = torch.device("cuda")
-for path in ["test", "test_boundary"]:
-    eval_set = HomogeneousPoseSet(1, False, path, device)
 
-    robots = []
-    graphs = []
-    struct_data = []
-    for morph_idx in tqdm(range(len(eval_set.morphologies)), "To graph"):
-        morph = eval_set.morphologies[morph_idx]
-        dofp1 = (morph.abs().sum(dim=1) != 0).sum().item()
-        morph = morph[:dofp1]
+eval_set = HomogeneousPoseSet(1, False, "test", device)
 
-        params = {
-            "alpha": morph[:, 0].tolist(),
-            "a": morph[:, 1].tolist(),
-            "d": morph[:, 2].tolist(),
-            "theta": [0] * morph.shape[0],
-            "num_joints": morph.shape[0],
-            "modified_dh": True,
-        }
+robots = []
+graphs = []
+struct_data = []
+for morph_idx in tqdm(range(len(eval_set.morphologies)), "To graph"):
+    morph = eval_set.morphologies[morph_idx]
+    dofp1 = (morph.abs().sum(dim=1) != 0).sum().item()
+    morph = morph[:dofp1]
 
-        robots += [RobotRevolute(params)]
-        graphs += [ProblemGraphRevolute(robots[-1])]
-        struct_data += [generate_struct_data(graphs[-1])]
+    params = {
+        "alpha": morph[:, 0].tolist(),
+        "a": morph[:, 1].tolist(),
+        "d": morph[:, 2].tolist(),
+        "theta": [0] * morph.shape[0],
+        "num_joints": morph.shape[0],
+        "modified_dh": True,
+    }
 
-    directory = Path(__file__).parent / "cache" / "ggik" / path
-    directory.mkdir(parents=True, exist_ok=True)
-    pickle.dump(graphs, open(directory / "graphs.pickle", "wb"))
+    robots += [RobotRevolute(params)]
+    graphs += [ProblemGraphRevolute(robots[-1])]
+    struct_data += [generate_struct_data(graphs[-1])]
 
-    data = []
-    label_buffer = []
+directory = Path(__file__).parent / "cache" / "test"
+directory.mkdir(parents=True, exist_ok=True)
+pickle.dump(graphs, open(directory / "graphs.pickle", "wb"))
 
-    morph_indices = []
-    pose_buffer = []
-    morph_count = torch.zeros(len(graphs), dtype=torch.int)
+data = []
+label_buffer = []
 
-    eval_set = HomogeneousPoseSet(1000, False, path)
-    for batch_idx, (morph, pose, label, morph_idx) in enumerate(tqdm(eval_set, desc=path)):
-        for inner_idx, (mi, p, l) in enumerate(zip(morph_idx, pose, label)):
-            if morph_count[mi] >= 1000:
-                continue
-            morph_indices += [mi]
-            data += [generate_data_point_from_pose(graphs[mi],
-                                                   SE3.from_matrix(se3.from_vector(p).numpy(), normalize=True),
-                                                   struct_data[mi])]
-            pose_buffer += [p]
-            label_buffer += [l]
-            morph_count[mi] += 1
+morph_indices = []
+pose_buffer = []
+morph_count = torch.zeros(len(graphs), dtype=torch.int)
 
-    torch.save(torch.tensor(morph_indices), directory / "morph_indices.pth")
-    torch.save(torch.stack(pose_buffer), directory / "poses.pth")
+eval_set = HomogeneousPoseSet(1000, False, "test", device)
+for batch_idx, (morph, pose, label, morph_idx) in enumerate(tqdm(eval_set, desc="test")):
+    for inner_idx, (mi, p, l) in enumerate(zip(morph_idx, pose, label)):
+        if morph_count[mi] >= 1000:
+            continue
+        morph_indices += [mi]
+        data += [generate_data_point_from_pose(graphs[mi],
+                                               SE3.from_matrix(se3.from_vector(p).cpu().numpy(), normalize=True),
+                                               struct_data[mi])]
+        pose_buffer += [p]
+        label_buffer += [l]
+        morph_count[mi] += 1
 
-    torch.save(torch.tensor(label_buffer), directory / "labels.pth")
-    pickle.dump(data, open(directory / "data.pickle", "wb"))
+torch.save(torch.tensor(morph_indices), directory / "morph_indices.pth")
+torch.save(torch.stack(pose_buffer), directory / "poses.pth")
+
+torch.save(torch.tensor(label_buffer), directory / "labels.pth")
+pickle.dump(data, open(directory / "data.pickle", "wb"))

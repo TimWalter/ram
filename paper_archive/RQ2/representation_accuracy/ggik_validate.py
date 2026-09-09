@@ -54,7 +54,7 @@ def dof_masks(path: str, morph_index: torch.Tensor) -> dict[str, torch.Tensor]:
 if __name__ == "__main__":
     torch.manual_seed(0)
 
-    splits = {path: load_split(path) for path in ["test", "test_boundary"]}
+    splits = {path: load_split(path) for path in ["test"]}
 
     # Mirrors ram.validate.validate: a single threshold is shared by the random and boundary split.
     threshold = best_confidence_threshold(*splits["test"])
@@ -67,6 +67,6 @@ if __name__ == "__main__":
         for dof_key, mask in masks.items():
             split_results[dof_key] = compute_metrics(logit[mask], label[mask], morph_index[mask], threshold)
 
-        directory = Path(__file__).parent / "cache" / "ggik" / path
+        directory = Path(__file__).parent / "cache" / path
         pickle.dump(split_results, open(directory / "results.pickle", "wb"))
         print(path, split_results)

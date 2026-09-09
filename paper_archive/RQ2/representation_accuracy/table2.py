@@ -7,25 +7,30 @@ from paper_archive.utils import latex_mean_and_ci
 import wandb
 import torch
 
-ggik = pickle.load(open(Path(__file__).parent / "cache" / "ggik" /"test" / "results.pickle", "rb"))["All"]["Balanced Accuracy (Mean)"]
+ggik = pickle.load(open(Path(__file__).parent / "cache" / "test" / "results.pickle", "rb"))["All"][
+    "Balanced Accuracy (Mean)"]
 
-inference_time = pickle.load(open(Path(__file__).parent / "runtime_ours.pkl", "rb"))
+inference_time = pickle.load(open(Path(__file__).parent / "cache" / "runtime_ours.pkl", "rb"))
 
 api = wandb.Api()
-runs = api.runs(
+test_runs = api.runs(
     "tim-walter-tum/RAM",
     filters={"group": "RAM"}
 )
+training_runs = api.runs(
+    "tim-walter-tum/RAM",
+    filters={"group": "RAM-Train"}
+)
 
 training_time_list = []
+for run in training_runs:
+    training_time_list += [run.summary.get("_runtime") / 3600]
 bacc_list = []
-for run in runs:
+for run in test_runs:
     bacc_list += [run.summary.get("Validation/Balanced Accuracy (Mean)")]
-    training_time_list += [run.summary.get("_runtime")/3600]
 
-training_time = sum(training_time_list) / len(training_time_list)
-
-bacc = latex_mean_and_ci(*bootstrap_mean_ci(torch.tensor(bacc_list).unsqueeze(1)))
+training_time = round(sum(training_time_list) / len(training_time_list))
+bacc = latex_mean_and_ci(*bootstrap_mean_ci(torch.tensor(bacc_list).unsqueeze(1)), decimals=0)
 
 print(rf"""
 \begin{{table}}[H]
@@ -34,13 +39,13 @@ print(rf"""
         label = {{tab:ram_accuracy}},
     ]{{
         colspec = {{l r r r}},
-        row{{1}} = []{{font=\bfseries}}, 
+        row{{1}} = {{font=\bfseries}}, 
     }}
         \toprule
         Classifier & {{Training  (h)}} & {{Inference (s)}} & \SetCell{{l}}{{Balanced (\%)\\ Accuracy }}  \\
         \midrule
-        RAM  & \textbf{{{training_time}}} & $\bm{{{inference_time}\cdot10^ {{-6}}}}$ & {{\bfseries{bacc}}} \\
-        GGIK & 756 & $2.2\cdot10^{{-2}}$ & {ggik} \\
+        RAM  & \textbf{{{training_time}}} & $\bm{{{round(inference_time)}\cdot10^ {{-9}}}}$ & {{\bfseries{bacc}}} \\
+        GGIK & 756 & $2.2\cdot10^{{-2}}$ & {round(ggik)} \\
         \bottomrule
     \end{{talltblr}}
 \end{{table}}
