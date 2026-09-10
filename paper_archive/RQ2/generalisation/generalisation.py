@@ -50,9 +50,9 @@ metrics = {
     i + 1: val for i, (_, val) in enumerate(sorted(zip(created, metrics_list), key=lambda pair: pair[0]))
 }
 
-bacc_mean = np.array([mean for _, mean in sorted(zip(created, bacc_mean), key=lambda pair: pair[0])[:-1]])
-bacc_lower = np.array([lower for _, lower in sorted(zip(created, bacc_lower), key=lambda pair: pair[0])[:-1]])
-bacc_upper = np.array([upper for _, upper in sorted(zip(created, bacc_upper), key=lambda pair: pair[0])[:-1]])
+bacc_mean = np.array([mean for _, mean in sorted(zip(created, bacc_mean), key=lambda pair: pair[0])])
+bacc_lower = np.array([lower for _, lower in sorted(zip(created, bacc_lower), key=lambda pair: pair[0])])
+bacc_upper = np.array([upper for _, upper in sorted(zip(created, bacc_upper), key=lambda pair: pair[0])])
 
 print(r"""
 \begin{table}[ht]
@@ -82,18 +82,23 @@ print(r"""\bottomrule
 """)
 
 
+
 # --- PLOTTING ---
-fig, ax = plt.subplots(figsize=(30, 7))
+def plot_bars(axis, x, mean, lower, upper):
+    """Draw the base bar, the translucent CI block, the mean line and the value label."""
+    axis.bar(x, lower, width, color=get_plt_colour(0), zorder=2)
+    rects_ci = axis.bar(x, upper - lower, width, bottom=lower, color=get_plt_colour(0), alpha=0.4, zorder=2)
+    axis.hlines(y=mean, xmin=x - width / 2, xmax=x + width / 2, colors="black", linewidth=4, zorder=3)
+    axis.bar_label(rects_ci, padding=4, labels=[int(round(m)) for m in np.atleast_1d(mean)], fontsize=34)
+
+
+# The two panels share the y-axis; their width ratios match their x-ranges (9 DoF units vs. 3 units)
+# so that the bars come out equally wide in both of them.
+fig, (ax, ax2) = plt.subplots(1, 2, figsize=(15, 7), sharey=True, gridspec_kw={"width_ratios": [9, 3]})
 width = 0.25
 dof = np.arange(1, 10)
-# 1. Solid base bar from 0 up to the Lower Confidence Bound
-rects1_base = ax.bar(dof, bacc_lower, width, color=get_plt_colour(0), zorder=2)
-# 2. High alpha (translucent shadow) interval bar from Lower to Upper Bound
-rects1_ci = ax.bar(dof, bacc_upper - bacc_lower, width, bottom=bacc_lower, color=get_plt_colour(0), alpha=0.4, zorder=2)
-# 3. Flat line highlighting the actual observed mean value inside the column structure
-ax.hlines(y=bacc_mean, xmin=dof - width/2, xmax=dof + width/2, colors="black", linewidth=4, zorder=3)
-# 4. Text labels positioned cleanly right above the highest reach of the CI block
-ax.bar_label(rects1_ci, padding=4, labels=[int(round(m)) for m in bacc_mean], fontsize=34)
+
+plot_bars(ax, dof, bacc_mean[:-1], bacc_lower[:-1], bacc_upper[:-1])
 
 # Distribution Spans
 span_ood = ax.axvspan(0.5, 4.5, alpha=0.12, color=get_plt_colour(3), ymin=0, ymax=1)
@@ -108,14 +113,27 @@ ax.set_xlabel(r"Degrees of Freedom")
 ax.set_ylabel(r"Balanced Accuracy (\%)")
 ax.grid(linewidth=1, alpha=0.5, zorder=0, axis="y")
 
-ax.legend(
+# Separate panel for the spherical wrist data, sharing the y-axis and the legend.
+plot_bars(ax2, np.array([1.0]), bacc_mean[-1:], bacc_lower[-1:], bacc_upper[-1:])
+ax2.axvspan(-0.5, 2.5, alpha=0.12, color=get_plt_colour(3), ymin=0, ymax=1)
+
+ax2.set_xlim(-0.5, 2.5)
+ax2.set_xticks([1.0])
+ax2.set_xticklabels(["1"], color="none")
+ax2.set_xlabel(r"Spherical Wrist")
+ax2.grid(linewidth=1, alpha=0.5, zorder=0, axis="y")
+ax2.tick_params(axis="y", left=False)
+
+fig.legend(
     [span_id, span_ood],
-    [r"In Distribution", r"Out of Distribution"],
+    [r"In-Distribution", r"Out-of-Distribution"],
     ncol=4,
-    loc="lower center",
-    bbox_to_anchor=(0.5, 1.02)
+    loc="upper center",
+    bbox_to_anchor=(0.5, 0.995),
 )
 
-plt.tight_layout()
+fig.tight_layout(rect=(0, 0, 1, 0.86))
+# Set after tight_layout, which would otherwise reset the gap between the two panels.
+fig.subplots_adjust(wspace=0.08)
 plt.savefig("generalisation.pdf")
 plt.show()
