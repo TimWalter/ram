@@ -25,23 +25,22 @@ intervals = [1, 1, 10, 30]
 num_robots = 50
 num_samples = 100_000
 
-# Data Generation
-morphs = {}
-labels = {}
-cell_indices = {}
-for dof in [5, 6, 7]:
-    morphs[dof] = sample_morph(num_robots, dof, False, device)
-    labels[dof] = []
-    cell_indices[dof] = {1: [], 2: [], 3: [], 4: []}
-    for m in morphs[dof]:
-        p, l = synthesise_data(m, num_samples, True, True)
-        labels[dof] += [l]
-        for level in levels:
-            se3.set_level(level)
-            c = se3.index(p)
-            cell_indices[dof][level] += [c]
-
 if not any(cache.iterdir()):
+    # Data Generation
+    morphs = {}
+    labels = {}
+    cell_indices = {}
+    for dof in [5, 6, 7]:
+        morphs[dof] = sample_morph(num_robots, dof, False, device)
+        labels[dof] = []
+        cell_indices[dof] = {1: [], 2: [], 3: [], 4: []}
+        for m in morphs[dof]:
+            p, l = synthesise_data(m, num_samples, True, True)
+            labels[dof] += [l]
+            for level in levels:
+                se3.set_level(level)
+                c = se3.index(p)
+                cell_indices[dof][level] += [c]
     cell_distance = []
     benchmarks = []
     # Table 1
@@ -133,7 +132,7 @@ for i, level in enumerate(levels):
         current_runtime = r"$\leq 1$"
     else:
         current_runtime = latex_mean_and_ci(*runtime[i])
-    random = latex_mean_and_ci(*balanced_accuracy[i])
+    random = latex_mean_and_ci(*balanced_accuracy[i], decimals=0)
     print(
         rf"$\left[{cell_distance[i][0]:.3f}, {cell_distance[i][1]:.3f}\right]$ & ${int(n_cells[i]):,}$ & {current_runtime} & {random} \\\addlinespace")
 print(r"""\bottomrule
@@ -142,25 +141,19 @@ print(r"""\bottomrule
 # Table A1
 print(r"""
     \begin{tblr}{
-                colspec = {l r r r r r},
+                colspec = {l r r r r},
                 row{1} = {font=\bfseries},
             }
             \toprule
-            Cell Spacing & DoF & TPR (\%) & FNR (\%) & FPR (\%) & TNR (\%)\\
+            Cell Spacing & TPR (\%) & FNR (\%) & FPR (\%) & TNR (\%)\\
             \midrule""")
 for i, l in enumerate(levels):
-    print(rf"$\left[{cell_distance[i][0]:.3f}, {cell_distance[i][1]:.3f}\right]$")
-    for dof in ("All", 5, 6, 7):
-        row = rf"& {dof} \\"
-        for cm in [confusion_matrix]:
-            cm_inner = torch.stack(cm[dof][i], dim=-1)
-            tpr = latex_mean_and_ci(*cm_inner[0])
-            fnr = latex_mean_and_ci(*cm_inner[1])
-            fpr = latex_mean_and_ci(*cm_inner[2])
-            tnr = latex_mean_and_ci(*cm_inner[3])
-            row += rf"& {tpr} & {fnr} & {fpr} & {tnr}"
-        row += r"\\"
-        print(row)
+    cm = torch.stack(confusion_matrix["All"][i], dim=-1)
+    tpr = latex_mean_and_ci(*cm[0], decimals=0)
+    fnr = latex_mean_and_ci(*cm[1], decimals=0)
+    fpr = latex_mean_and_ci(*cm[2], decimals=0)
+    tnr = latex_mean_and_ci(*cm[3], decimals=0)
+    print(rf"$\left[{cell_distance[i][0]:.3f}, {cell_distance[i][1]:.3f}\right]$ & {tpr} & {fnr} & {fpr} & {tnr} \\")
 print(r"""\bottomrule
     \end{tblr}""")
 
