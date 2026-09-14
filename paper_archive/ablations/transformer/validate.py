@@ -4,12 +4,14 @@ import torch
 from tqdm import tqdm
 from torch import Tensor
 from beartype import beartype
-from jaxtyping import Float, Bool, jaxtyped, Int
+from jaxtyping import Float, Bool, jaxtyped, Int, config
 
 from ram.logger import Logger
 from paper_archive.ablations.transformer.model import Model
 from ram.dataset.loader import HomogeneousPoseSet
 from ram.train import validation
+
+config.update("jaxtyping_disable", True)
 
 
 @jaxtyped(typechecker=beartype)

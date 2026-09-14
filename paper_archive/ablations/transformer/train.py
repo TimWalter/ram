@@ -4,11 +4,14 @@ import argparse
 import torch
 import optuna
 from tqdm import tqdm
+from jaxtyping import config
 
 from ram.logger import Logger
 from paper_archive.ablations.transformer.model import Model
 from ram.dataset.loader import IndexedCellSet, HomogeneousPoseSet
 
+
+config.update("jaxtyping_disable", True)
 
 def validation(model: Model, logger: Logger, validation_set: HomogeneousPoseSet, loss_function) -> float:
     """
