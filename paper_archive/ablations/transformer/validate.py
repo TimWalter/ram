@@ -98,14 +98,23 @@ def validate(model_id: int, batch_size: int, val_set_path: str | None, test_set_
 
 
 if __name__ == '__main__':
-    torch.manual_seed(0)
+    import re
+    import wandb
+    api = wandb.Api()
+
+    training_runs = api.runs(
+        "tim-walter-tum/RAM",
+        filters={"group": "Transformer-Train"}
+    )
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_id", type=int, default=2069)
     parser.add_argument("--batch_size", type=int, default=1000)
     parser.add_argument("--val_set_path", type=str, default=None)
-    parser.add_argument("--test_set_path", type=str, default="boundary/test")
-    parser.add_argument("--group", type=str, default="Boundary", help="W&B group")
+    parser.add_argument("--test_set_path", type=str, default="test")
+    parser.add_argument("--group", type=str, default="Transformer", help="W&B group")
     args = parser.parse_args()
 
-    validate(**vars(args))
+    for run in training_runs:
+        args.model_id = int(re.findall(r'\d+', run.name)[-1])
+        validate(**vars(args))
