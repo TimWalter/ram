@@ -17,9 +17,13 @@ SHARD_SIZE = CHUNK_SIZE * 1000  # ~4.4GB
 parser = argparse.ArgumentParser()
 parser.add_argument("--set", type=str, default="val", help="Set type")
 parser.add_argument("--dof", type=int, default=6, help="Degrees of freedom")
-parser.add_argument("--num_robots", type=int, default=2, help="Number of robots to generate")
+parser.add_argument("--num_robots", type=int, default=1, help="Number of robots to generate")
 parser.add_argument("--num_samples", type=int, default=100_000, help="Number of samples per robot")
+parser.add_argument("--seed", type=int, default=-1, help="Seed, if -1 dont seed")
 args = parser.parse_args()
+
+if args.seed != -1:
+    torch.manual_seed(args.seed)
 
 assert args.num_samples * args.num_robots % CHUNK_SIZE == 0, \
     f"Only full chunks are supported (chunk size {CHUNK_SIZE})"

@@ -7,6 +7,7 @@ import zarr
 import fasteners
 from tqdm import tqdm
 
+import ram.dataset.se3 as se3
 from ram.dataset.morphology import sample_morph
 from ram.dataset.workspace import synthesise_data
 
@@ -14,17 +15,24 @@ CHUNK_SIZE = 100_000  # ~2.4MB
 SHARD_SIZE = CHUNK_SIZE * 1000  # ~2.4GB
 
 parser = argparse.ArgumentParser()
+parser.add_argument("--set", type=str, default="train", help="Where to store")
 parser.add_argument("--dof", type=int, default=5, help="Degrees of freedom")
-parser.add_argument("--num_robots", type=int, default=2, help="Number of robots to generate")
-parser.add_argument("--num_samples", type=int, default=100_000, help="Number of samples per robot")
+parser.add_argument("--num_robots", type=int, default=1, help="Number of robots to generate")
+parser.add_argument("--num_samples", type=int, default=1_000_000, help="Number of samples per robot")
+parser.add_argument("--seed", type=int, default=-1, help="Seed, if -1 dont seed")
+parser.add_argument("--level", type=int, default=3, help="Discretisation level")
 args = parser.parse_args()
+
+if args.seed != -1:
+    torch.manual_seed(args.seed)
+se3.set_level(args.level)
 
 assert args.num_samples * args.num_robots % CHUNK_SIZE == 0, \
     f"Only full chunks are supported (chunk size {CHUNK_SIZE})"
 assert SHARD_SIZE / args.num_samples == SHARD_SIZE // args.num_samples, \
     f"One robot must belong to one shard (shard size {SHARD_SIZE})"
 
-SAFE_FOLDER = Path(__file__).parent.parent.parent / "data" / "train"
+SAFE_FOLDER = Path(__file__).parent.parent.parent / "data" / args.set
 lock = fasteners.InterProcessLock(SAFE_FOLDER.parent / "train_lock.file")
 compressor = zarr.codecs.BloscCodec(cname='zstd', clevel=3, shuffle=zarr.codecs.BloscShuffle.bitshuffle)
 
