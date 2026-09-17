@@ -131,7 +131,7 @@ for i, level in enumerate(levels):
     if runtime[i][0] == 1.0:
         current_runtime = r"$\leq 1$"
     else:
-        current_runtime = latex_mean_and_ci(*runtime[i])
+        current_runtime = latex_mean_and_ci(*runtime[i], decimals=0)
     random = latex_mean_and_ci(*balanced_accuracy[i], decimals=0)
     print(
         rf"$\left[{cell_distance[i][0]:.3f}, {cell_distance[i][1]:.3f}\right]$ & ${int(n_cells[i]):,}$ & {current_runtime} & {random} \\\addlinespace")
