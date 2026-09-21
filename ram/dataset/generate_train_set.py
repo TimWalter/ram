@@ -33,7 +33,7 @@ assert SHARD_SIZE / args.num_samples == SHARD_SIZE // args.num_samples, \
     f"One robot must belong to one shard (shard size {SHARD_SIZE})"
 
 SAFE_FOLDER = Path(__file__).parent.parent.parent / "data" / args.set
-lock = fasteners.InterProcessLock(SAFE_FOLDER.parent / "train_lock.file")
+lock = fasteners.InterProcessLock(SAFE_FOLDER.parent / f"{args.set}_lock.file")
 compressor = zarr.codecs.BloscCodec(cname='zstd', clevel=3, shuffle=zarr.codecs.BloscShuffle.bitshuffle)
 
 with lock:
