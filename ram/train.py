@@ -5,6 +5,7 @@ import torch
 import optuna
 from tqdm import tqdm
 
+import ram.dataset.se3 as se3
 from ram.logger import Logger
 from ram.model import Model
 from ram.dataset.loader import IndexedCellSet, HomogeneousPoseSet
@@ -75,7 +76,7 @@ def train(training_set_path: str,
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
 
     training_set = IndexedCellSet(batch_size, True, training_set_path, device)
-    if validation_set_path is not None:
+    if validation_set_path is not None and validation_set_path != "":
         validation_set = HomogeneousPoseSet(batch_size, False, validation_set_path, device)
 
     loss_function = torch.nn.BCEWithLogitsLoss(reduction='mean')
@@ -98,7 +99,7 @@ def train(training_set_path: str,
             if stop_after is not None and stop_after <= batch_idx:
                 break
 
-            if validation_set_path is not None and batch_idx % validation_interval == 0:
+            if validation_set_path is not None and validation_set_path != "" and batch_idx % validation_interval == 0:
                 logger.checkpoint()
                 with torch.no_grad():
                     metric = validation(model, logger, validation_set, loss_function)
@@ -137,11 +138,15 @@ if __name__ == '__main__':
     parser.add_argument("--lr", type=float, default=3e-4)
 
     parser.add_argument("--group", type=str, default=None, help="W&B group")
+
+    parser.add_argument("--level", type=int, default=3, help="Discretisation level")
     args = parser.parse_args()
 
     if args.seed != -1:
         torch.manual_seed(args.seed)
         random.seed(args.seed)
     del args.seed
+    se3.set_level(args.level)
+    del args.level
 
     train(**vars(args), hyperparameter={})

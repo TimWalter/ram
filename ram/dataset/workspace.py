@@ -8,7 +8,6 @@ import torch
 from torch import Tensor
 from beartype import beartype
 from jaxtyping import Float, jaxtyped, Bool, Int64, config
-from tabulate import tabulate
 
 import ram.dataset.r3 as r3
 import ram.dataset.se3 as se3
