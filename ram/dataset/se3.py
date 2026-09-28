@@ -269,9 +269,11 @@ def exp(pose: Float[Tensor, "*batch 4 4"], tangent: Float[Tensor, "*batch 6"]) -
         and that quantifying length is not something that we will be able to do without specifying a metric.
         [Source https://geomstats.github.io/notebooks/02_foundations__connection_riemannian_metric.html]
     """
+    position = r3.exp(pose[..., :3, 3], tangent[..., :3])
+    orientation = so3.exp(pose[..., :3, :3], tangent[..., 3:])
     pose = pose.clone()
-    pose[..., :3, 3] = r3.exp(pose[..., :3, 3], tangent[..., :3])
-    pose[..., :3, :3] = so3.exp(pose[..., :3, :3], tangent[..., 3:])
+    pose[..., :3, 3] = position
+    pose[..., :3, :3] = orientation
     return pose
 
 
