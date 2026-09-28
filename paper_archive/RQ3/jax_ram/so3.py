@@ -7,7 +7,7 @@ from jaxtyping import Float, jaxtyped
 
 from scipy.spatial.transform import Rotation
 
-enabled = os.environ.get("SCIPY_ARRAY_API", "").lower() in ("1")
+enabled = os.environ.get("SCIPY_ARRAY_API", "").lower() == "1"
 if not enabled:
     raise RuntimeError(
         "SCIPY_ARRAY_API must be enabled! "
@@ -15,27 +15,11 @@ if not enabled:
     )
 
 
-# @jax.custom_vjp
-# def safe_arccos(x):
-#     """arccos with exact forward pass, finite-gradient backward pass."""
-#     return jnp.arccos(x)
-#
-#
-# def safe_arccos_fwd(x):
-#     return safe_arccos(x), x
-#
-#
-# def safe_arccos_bwd(x, g):
-#     denom = jnp.sqrt(jnp.maximum(1.0 - x ** 2, 1e-7))
-#     return (-g / denom,)
-#
-#
-# safe_arccos.defvjp(safe_arccos_fwd, safe_arccos_bwd)
-
 @jax.custom_jvp
 def safe_arccos(x):
     """arccos with exact forward pass, finite-gradient backward pass."""
     return jnp.arccos(x)
+
 
 @safe_arccos.defjvp
 def safe_arccos_jvp(primals, tangents):
@@ -44,7 +28,6 @@ def safe_arccos_jvp(primals, tangents):
 
     primal_out = safe_arccos(x)
 
-    # Safe denominator to prevent division by zero at the boundaries (-1.0, 1.0)
     denom = jnp.sqrt(jnp.maximum(1.0 - x ** 2, 1e-7))
     tangent_out = -x_dot / denom
 
@@ -52,8 +35,8 @@ def safe_arccos_jvp(primals, tangents):
 
 
 @jaxtyped(typechecker=beartype)
-def distance(x1: Float[Array, "*batch 3 3"],
-             x2: Float[Array, "*batch 3 3"]) -> Float[Array, "*batch 1"]:
+def distance(x1: Float[Array, "*#batch 3 3"],
+             x2: Float[Array, "*#batch 3 3"]) -> Float[Array, "*#batch 1"]:
     """
     Geodesic distance between rotation matrices.
 
@@ -106,7 +89,7 @@ def to_index(orientation: Float[Array, "batch 3 3"]) -> Float[Array, "batch 3"]:
 
 
 @jax.jit
-def from_index(rot_vec: Float[Array, "batch 3"]) -> Float[Array, "batch 3 3"]:
+def from_index(rot_vec: Float[Array, "*batch 3"]) -> Float[Array, "*batch 3 3"]:
     """
     Convert the rotation vector, which we use for indexing the lookup, to 3x3 rotation matrix.
 
@@ -115,8 +98,55 @@ def from_index(rot_vec: Float[Array, "batch 3"]) -> Float[Array, "batch 3 3"]:
 
     Returns:
         Rotation matrix
+
+    Notes:
+        Rodrigues' formula instead of scipy's Rotation.from_rotvec, whose gradient is NaN at the zero rotation vector
+        under JAX (unlike under torch), which is exactly where tangent-space offsets are initialised.
     """
-    return Rotation.from_rotvec(rot_vec).as_matrix()
+    angle_sq = jnp.sum(jnp.square(rot_vec), axis=-1, keepdims=True)[..., None]
+    is_small = angle_sq < 1e-12
+    # Keep the unused branch finite too, otherwise its NaN gradient leaks through jnp.where.
+    safe_angle_sq = jnp.where(is_small, 1.0, angle_sq)
+    angle = jnp.sqrt(safe_angle_sq)
+    sin_coeff = jnp.where(is_small, 1.0 - angle_sq / 6.0, jnp.sin(angle) / angle)
+    cos_coeff = jnp.where(is_small, 0.5 - angle_sq / 24.0, (1.0 - jnp.cos(angle)) / safe_angle_sq)
+
+    x, y, z = rot_vec[..., 0], rot_vec[..., 1], rot_vec[..., 2]
+    zero = jnp.zeros_like(x)
+    skew = jnp.stack([
+        jnp.stack([zero, -z, y], axis=-1),
+        jnp.stack([z, zero, -x], axis=-1),
+        jnp.stack([-y, x, zero], axis=-1)
+    ], axis=-2)
+
+    return jnp.eye(3, dtype=rot_vec.dtype) + sin_coeff * skew + cos_coeff * (skew @ skew)
+
+
+@jaxtyped(typechecker=beartype)
+def exp(orientation: Float[Array, "*batch 3 3"], tangent: Float[Array, "*batch 3"]) -> Float[Array, "*batch 3 3"]:
+    """
+    Differential geometry version of addition.
+
+    Args:
+        orientation: Orientation.
+        tangent: Tangent vector.
+
+    Returns:
+        Moves from orientation along the tangent vector.
+
+    Notes:
+        In Euclidean space, 𝑎𝑑𝑑𝑖𝑡𝑖𝑜𝑛 is a tool which takes two points 𝑝1,𝑝2, “adds” them, and generates a third, larger point
+        𝑝3. Addition gives us a way to “move forward” in Euclidean space. On manifolds, the 𝑒𝑥𝑝𝑜𝑛𝑒𝑛𝑡𝑖𝑎𝑙 provides a tool,
+        which “takes the exponential of the tangent vector at point 𝑝” to generate a third point on the manifold.
+        The exponential does this by
+        1) identifying the unique geodesic 𝛾 that goes through 𝑝 and 𝑣𝑝,
+        2) identifying the “length” 𝑙 of the tangent vector 𝑣𝑝, and
+        3) calculating another point 𝑝′ along 𝛾⁡(𝑡) that is a “distance” 𝑙 from the initial point 𝑝.
+        Note again that the notion of “length” and “distance” is different on a manifold than it is in Euclidean space
+        and that quantifying length is not something that we will be able to do without specifying a metric.
+        [Source https://geomstats.github.io/notebooks/02_foundations__connection_riemannian_metric.html]
+    """
+    return orientation @ from_index(tangent)
 
 
 @jaxtyped(typechecker=beartype)
@@ -146,61 +176,4 @@ def log(orientation1: Float[Array, "*batch 3 3"], orientation2: Float[Array, "*b
         extract the unique tangent vector that produced that geodesic.
         [Source https://geomstats.github.io/notebooks/02_foundations__connection_riemannian_metric.html]
     """
-    return to_index_differentiable(jnp.swapaxes(orientation1, -1, -2) @ orientation2)
-
-
-@jaxtyped(typechecker=beartype)
-def exp(orientation: Float[Array, "*batch 3 3"], tangent: Float[Array, "*batch 3"]) -> Float[Array, "*batch 3 3"]:
-    """
-    Differential geometry version of addition.
-
-    Args:
-        orientation: Orientation.
-        tangent: Tangent vector.
-
-    Returns:
-        Moves from orientation along the tangent vector.
-
-    Notes:
-        In Euclidean space, 𝑎𝑑𝑑𝑖𝑡𝑖𝑜𝑛 is a tool which takes two points 𝑝1,𝑝2, “adds” them, and generates a third, larger point
-        𝑝3. Addition gives us a way to “move forward” in Euclidean space. On manifolds, the 𝑒𝑥𝑝𝑜𝑛𝑒𝑛𝑡𝑖𝑎𝑙 provides a tool,
-        which “takes the exponential of the tangent vector at point 𝑝” to generate a third point on the manifold.
-        The exponential does this by
-        1) identifying the unique geodesic 𝛾 that goes through 𝑝 and 𝑣𝑝,
-        2) identifying the “length” 𝑙 of the tangent vector 𝑣𝑝, and
-        3) calculating another point 𝑝′ along 𝛾⁡(𝑡) that is a “distance” 𝑙 from the initial point 𝑝.
-        Note again that the notion of “length” and “distance” is different on a manifold than it is in Euclidean space
-        and that quantifying length is not something that we will be able to do without specifying a metric.
-        [Source https://geomstats.github.io/notebooks/02_foundations__connection_riemannian_metric.html]
-    """
-    return orientation @ from_index(tangent)
-
-@jaxtyped(typechecker=beartype)
-def to_index_differentiable(orientation: Float[Array, "*batch 3 3"]) -> Float[Array, "*batch 3"]:
-    """
-    Differentiable conversion from SO(3) rotation matrix to rotation vector (axis-angle).
-    Replaces the scipy.spatial.transform.Rotation dependency.
-    """
-    # 1. Compute trace and angle
-    trace = jnp.trace(orientation, axis1=-2, axis2=-1)
-
-    # Clip to avoid NaNs in arccos and to dodge the exact pi-singularity (where cos(pi) = -1)
-    cos_angle = jnp.clip((trace - 1.0) / 2.0, -1.0 + 1e-6, 1.0 - 1e-6)
-    angle = safe_arccos(cos_angle)[..., None]
-
-    # 2. Extract the skew-symmetric part (proportional to the axis of rotation)
-    vec = jnp.stack([
-        orientation[..., 2, 1] - orientation[..., 1, 2],
-        orientation[..., 0, 2] - orientation[..., 2, 0],
-        orientation[..., 1, 0] - orientation[..., 0, 1]
-    ], axis=-1)
-
-    # 3. Calculate scale factor: angle / (2 * sin(angle))
-    # We use a Taylor expansion for small angles to prevent division by zero (0/0)
-    scale = jnp.where(
-        angle < 1e-3,
-        0.5 + (angle ** 2) / 12.0,
-        angle / (2.0 * jnp.sin(angle))
-    )
-
-    return vec * scale
+    return to_index(jnp.swapaxes(orientation1, -1, -2) @ orientation2)

@@ -18,7 +18,7 @@ dependencies = [
     "jupyter>=1.1.1",
     "plotly>=6.5.0",
     "seaborn>=0.13.2",
-    "scipy-stubs~=1.17.0rc2",
+    "scipy-stubs~=1.18.1",
     "liegroups @ git+ssh://git@github.com/utiasSTARS/liegroups.git@generative_ik",
     "graphIK @ git+ssh://git@github.com/utiasSTARS/graphIK.git@generative_ik",
     "torch_geometric",
@@ -28,7 +28,7 @@ dependencies = [
     "optax",
     "cmaes>=0.11.1",
     "huggingface_hub>=1.28.0",
-    "safetensors>=0.8.0"
+    "safetensors>=0.8.0",
 ]
 
 [tool.ruff]

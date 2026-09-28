@@ -6,11 +6,11 @@ from jax import Array
 from beartype import beartype
 from jaxtyping import Float, jaxtyped
 
-import paper_archive.ram_jax.se3 as se3
-import paper_archive.ram_jax.so3 as so3
-import paper_archive.ram_jax.r3 as r3
+import paper_archive.RQ3.jax_ram.se3 as se3
+import paper_archive.RQ3.jax_ram.so3 as so3
+import paper_archive.RQ3.jax_ram.r3 as r3
 
-from paper_archive.ram_jax.self_collision import collision_check
+from paper_archive.RQ3.jax_ram.self_collision import collision_check
 
 @jaxtyped(typechecker=beartype)
 def transformation_matrix(alpha: Float[Array, "*batch 1"], a: Float[Array, "*batch 1"], d: Float[Array, "*batch 1"],

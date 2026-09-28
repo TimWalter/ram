@@ -1,26 +1,12 @@
 import jax
 import jax.numpy as jnp
 from jax import Array
-from jaxtyping import Float
+from jaxtyping import Float, jaxtyped
+from beartype import beartype
 
-import paper_archive.ram_jax.r3 as r3
-import paper_archive.ram_jax.so3 as so3
+import paper_archive.RQ3.jax_ram.r3 as r3
+import paper_archive.RQ3.jax_ram.so3 as so3
 
-
-# @jax.custom_vjp
-# def safe_sqrt(x):
-#     return jnp.sqrt(x)
-#
-#
-# def safe_sqrt_fwd(x):
-#     return safe_sqrt(x), x
-#
-#
-# def safe_sqrt_bwd(x, g):
-#     return (g / 2 * x + 1e-11,)
-#
-#
-# safe_sqrt.defvjp(safe_sqrt_fwd, safe_sqrt_bwd)
 
 @jax.custom_jvp
 def safe_sqrt(x):
@@ -40,8 +26,8 @@ def safe_sqrt_jvp(primals, tangents):
     return primal_out, tangent_out
 
 
-# @jaxtyped(typechecker=beartype)
-def distance(x1: Float[Array, "*batch 4 4"], x2: Float[Array, "*batch 4 4"]) -> Float[Array, "*batch 1"]:
+@jaxtyped(typechecker=beartype)
+def distance(x1: Float[Array, "*#batch 4 4"], x2: Float[Array, "*#batch 4 4"]) -> Float[Array, "*#batch 1"]:
     r"""
     Pose distance arising from the unique left-invariant riemannian metric for SE(3) that produces physically meaningful
     accelerations plus a weighting between translation and rotation.
@@ -64,7 +50,7 @@ def distance(x1: Float[Array, "*batch 4 4"], x2: Float[Array, "*batch 4 4"]) -> 
 
     return safe_sqrt(r3.distance(t1, t2) / 8 + so3.distance(r1, r2) ** 2 / (2 * jnp.pi ** 2))
 
-
+@jaxtyped(typechecker=beartype)
 def from_vector(vec: Float[Array, "*batch 9"]) -> Float[Array, "*batch 4 4"]:
     """
     Convert 9D vector representation to 4x4 homogeneous transformation matrix
@@ -89,7 +75,7 @@ def from_vector(vec: Float[Array, "*batch 9"]) -> Float[Array, "*batch 4 4"]:
     return homogeneous
 
 
-# @jaxtyped(typechecker=beartype)
+@jaxtyped(typechecker=beartype)
 def exp(pose: Float[Array, "*batch 4 4"], tangent: Float[Array, "*batch 6"]) -> Float[Array, "*batch 4 4"]:
     """
     Differential geometry version of addition.

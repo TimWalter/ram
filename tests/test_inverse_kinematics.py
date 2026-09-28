@@ -6,7 +6,7 @@ from ram.dataset.kinematics import pure_analytical_inverse_kinematics, analytica
     forward_kinematics, numerical_inverse_kinematics
 from ram.dataset.morphology import sample_morph, get_joint_limits
 from ram.dataset.workspace import sample_poses_in_reach
-from ram.logger import binary_confusion_matrix
+from ram.metrics import binary_confusion_matrix
 
 torch.set_printoptions(sci_mode=False, precision=2)
 torch.set_default_dtype(torch.float64)
