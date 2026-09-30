@@ -1,5 +1,6 @@
 import torch
 
+from paper_archive.utils import latex_mean_and_ci
 from paper_archive.RQ3.morphology import experiment_plot, runtime_plot
 
 OPTIMISERS = {
@@ -13,12 +14,6 @@ METHODS = {
 }
 
 
-def num(mean: torch.Tensor, lower: torch.Tensor, upper: torch.Tensor, low: float = 0.0, high: float = 100.0) -> str:
-    """Formats a percentage and its CI as siunitx asymmetric uncertainty, clipping the CI to [low, high]."""
-    mean, lower, upper = mean.item(), max(lower.item(), low), min(upper.item(), high)
-    return rf"\num{{{mean:.0f}({mean - lower:.0f}:{upper - mean:.0f})}}"
-
-
 def main() -> None:
     runtime = runtime_plot.load()
     experiment = experiment_plot.load()
@@ -30,16 +25,17 @@ def main() -> None:
             metrics = experiment[method][optimiser]
             step_time = runtime[method][optimiser][-1, 0].item()
 
-            reached = metrics["success_rate"][-1]
+            reached = metrics["success_rate"][-1].clamp(0, 100)
 
             initial_error = metrics["pose_error"][0, 0]
             reduction = 100 * (1 - metrics["pose_error"][-1] / initial_error)
-            reduction = reduction[[0, 2, 1]]
-            collisions = 100 * metrics["self_collisions"][-1] / num_poses
+            reduction = reduction[[0, 2, 1]].clamp(max=100)
+            collisions = (100 * metrics["self_collisions"][-1] / num_poses).clamp(0, 100)
 
             prefix = rf"\SetCell[r={len(METHODS)}]{{l}} {optimiser_label}" if i == 0 else ""
-            rows.append(rf"{prefix:<24} & {method_label} & {step_time:.1f} & {num(*reached)} & {num(*reduction)} & "
-                        rf"{num(*collisions)} \\")
+            rows.append(rf"{prefix:<24} & {method_label} & {step_time:.1f} & "
+                        rf"{latex_mean_and_ci(*reached, decimals=0)} & {latex_mean_and_ci(*reduction, decimals=0)} & "
+                        rf"{latex_mean_and_ci(*collisions, decimals=0)} \\")
         rows.append(r"    \midrule")
     rows.pop()
 
