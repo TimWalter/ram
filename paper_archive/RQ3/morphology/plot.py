@@ -13,7 +13,6 @@ from paper_archive.RQ3.morphology.experiment_plot import METHODS, OPTIMISERS
 def main() -> None:
     runtime = runtime_plot.load()
     experiment = experiment_plot.load()
-    # Self-collisions are stored as counts per task, shown in percent to match table_3.py.
     num_poses = torch.load(experiment_plot.CACHE / "experiment_inputs.pt")["task"].shape[1]
     for method in METHODS:
         for optimiser in OPTIMISERS:
@@ -35,7 +34,6 @@ def main() -> None:
     })
 
     colors = sns.color_palette("colorblind", len(METHODS))
-    # Same order as the columns of table_3.py.
     metrics = {
         "success_rate": r"$\text{Reached Poses}$",
         "pose_error": r"$\text{Mean Pose Error}$",
@@ -54,7 +52,6 @@ def main() -> None:
 
             for ax, metric in zip(axes[1:], metrics):
                 mean, lower, upper = experiment[method][optimiser][metric].unbind(dim=1)
-                # experiment.py scores every eval_every-th step including the first and last.
                 iteration = torch.linspace(0, experiment_plot.N_ITER, mean.shape[0])
                 ax.plot(iteration, mean, label=label, color=colors[color], linestyle=style)
                 ax.fill_between(iteration, lower, upper, color=colors[color], alpha=0.2)

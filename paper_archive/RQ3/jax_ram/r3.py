@@ -4,7 +4,7 @@ from beartype import beartype
 from jaxtyping import Float, jaxtyped
 
 @jaxtyped(typechecker=beartype)
-def distance(x1: Float[Array, "*batch 3"], x2: Float[Array, "*batch 3"]) -> Float[Array, "*batch 1"]:
+def distance(x1: Float[Array, "*#batch 3"], x2: Float[Array, "*#batch 3"]) -> Float[Array, "*#batch 1"]:
     """
     Euclidean distance between vectors.
 

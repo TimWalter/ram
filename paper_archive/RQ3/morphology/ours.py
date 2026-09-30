@@ -55,8 +55,7 @@ def objective(model: Model,
         -> Float[Tensor, "pop"]:
     pop, num_samples = morphs.shape[0], task.shape[0]
     logit = model(morphs.repeat_interleave(num_samples, dim=0), task.repeat(pop, 1))
-    loss = torch.nn.functional.binary_cross_entropy_with_logits(logit, torch.ones_like(logit), reduction='none')
-    return loss.view(pop, num_samples).mean(dim=1)
+    return -torch.sigmoid(logit).view(pop, num_samples).mean(dim=1)
 
 
 def ours(initial_morph: Float[Tensor, "dofp1 3"],
