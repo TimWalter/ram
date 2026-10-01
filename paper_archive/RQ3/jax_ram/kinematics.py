@@ -1,5 +1,6 @@
 import jax
 import jax.numpy as jnp
+import lineax as lx
 import optimistix as optx
 
 from jax import Array
@@ -98,7 +99,7 @@ def numerical_inverse_kinematics(
             y0=init,
             args=target_pose,
             max_steps=100,
-            adjoint=optx.ImplicitAdjoint(),
+            adjoint=optx.ImplicitAdjoint(linear_solver=lx.AutoLinearSolver(well_posed=False)),
             throw=False,
         )
         return sol.value
