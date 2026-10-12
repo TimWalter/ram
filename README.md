@@ -19,7 +19,9 @@
 
 **TL;DR:** RAM is a fast, differentiable surrogate for pose reachability that generalises across robot morphologies, enabling rapid design and planning workflows.
 
-![RAM overview](https://raw.githubusercontent.com/TimWalter/ram/gh-pages/static/images/HeroFigure.svg)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/TimWalter/ram/gh-pages/static/images/HeroFigure.svg" />
+</p>
 
 ## Abstract
 
