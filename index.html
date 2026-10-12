@@ -22,7 +22,9 @@
   <meta name="citation_author" content="K\" ulz, Jonathan">
   <meta name="citation_author" content="Althoff, Matthias">
   <meta name="citation_publication_date" content="2026">
-  <meta name="citation_conference_title" content="Under Review">
+  <meta name="citation_conference_title" content="10th Annual Conference on Robot Learning (CoRL)">
+  <meta name="citation_arxiv_id" content="2606.09108">
+  <meta name="citation_pdf_url" content="https://arxiv.org/pdf/2606.09108">
 
   <!-- Additional SEO -->
   <meta name="theme-color" content="#2563eb">
@@ -82,11 +84,12 @@
     "description": "RAM is a morphology-conditioned implicit neural representation that predicts pose reachability across robot morphologies, enabling fast, differentiable reachability evaluation for design and planning.",
     "author": [
       { "@type": "Person", "name": "Tim Walter", "affiliation": { "@type": "Organization", "name": "Technical University of Munich" } },
-      { "@type": "Person", "name": "Xinyu Chen", "affiliation": { "@type": "Organization", "name": "University of Hamburg" } },
+      { "@type": "Person", "name": "Xinyu Chen", "affiliation": [{ "@type": "Organization", "name": "German Electron Synchrotron (DESY)" }, { "@type": "Organization", "name": "University of Hamburg" }] },
       { "@type": "Person", "name": "Jonathan K\"ulz", "affiliation": { "@type": "Organization", "name": "Technical University of Munich" } },
       { "@type": "Person", "name": "Matthias Althoff", "affiliation": { "@type": "Organization", "name": "Technical University of Munich" } }
     ],
-    "datePublished": "2026-01-01",
+    "datePublished": "2026-06-08",
+    "isPartOf": { "@type": "PublicationEvent", "name": "10th Annual Conference on Robot Learning (CoRL 2026)" },
     "keywords": ["reachability", "morphology", "implicit neural representation", "robotics", "design optimisation"],
     "isAccessibleForFree": true
   }
@@ -130,8 +133,8 @@
               </div>
 
               <div class="is-size-5 publication-institution">
-                <span class="institution-block"><sup>1</sup>Technical University of Munich, <sup>2</sup>University of
-                  Hamburg<br>Under Review</span>
+                <span class="institution-block"><sup>1</sup>Technical University of Munich, <sup>2</sup>German Electron Synchrotron
+                  (DESY) &amp; University of Hamburg<br>Conference on Robot Learning (CoRL) 2026</span>
               </div>
 
               <div class="column has-text-centered">
@@ -166,12 +169,30 @@
                     </a>
                   </span>
                   <span class="link-block">
+                    <a href="https://huggingface.co/TimWalter/RAM" target="_blank"
+                      rel="noopener noreferrer" class="external-link button is-normal is-rounded is-dark">
+                      <span class="icon">
+                        <span aria-hidden="true">🤗</span>
+                      </span>
+                      <span>Model</span>
+                    </a>
+                  </span>
+                  <span class="link-block">
+                    <a href="https://huggingface.co/datasets/TimWalter/RAM" target="_blank"
+                      rel="noopener noreferrer" class="external-link button is-normal is-rounded is-dark">
+                      <span class="icon">
+                        <span aria-hidden="true">🤗</span>
+                      </span>
+                      <span>Dataset</span>
+                    </a>
+                  </span>
+                  <span class="link-block">
                     <a id="dataset-link-btn" href="https://app.globus.org/file-manager?origin_id=fcf7ca2e-cd91-45fb-8252-c53fe972e4d2&origin_path=%2Fram%2F" target="_blank"
                       rel="noopener noreferrer" class="external-link button is-normal is-rounded is-dark">
                       <span class="icon">
                         <img src="static/images/lrz.png" alt="LRZ" style="height:1em; width:auto;" />
                       </span>
-                      <span>Dataset</span>
+                      <span>Dataset (Globus)</span>
                     </a>
                   </span>
 
@@ -230,11 +251,12 @@
                 to a single morphology. We introduce <strong>Reachability Across Morphologies (RAM)</strong>: a
                 morphology-conditioned, implicit neural representation that acts as a fast, differentiable surrogate for
                 pose reachability, generalising to unseen morphologies while inherently accounting for self-collisions.
-                To train RAM, we publish a large-scale dataset of $3 \cdot 10^{10}$ samples generated solely from
-                forward kinematics. Experiments show that our model achieves an $F_1\text{-score}$ of $86\%$ at
-                nanosecond inference, outperforming the baseline by $14\%$ while reducing inference time by three orders
-                of magnitude. We further demonstrate speed-ups of one and two orders of magnitude for gradient-based
-                morphology and trajectory optimisation, respectively.
+                RAM is trained on a large-scale dataset of $3 \cdot 10^{10}$ samples generated solely from forward
+                kinematics, which we publish alongside the model. Experiments show that RAM reaches $84\%$ balanced
+                accuracy at nanosecond inference, 15 percentage points higher than a generative inverse kinematics
+                baseline that also generalises across morphologies, while running three orders of magnitude faster.
+                This speed carries over to downstream tasks, accelerating morphology and trajectory optimisation by one
+                to two orders of magnitude.
               </p>
             </div>
           </div>
@@ -266,7 +288,7 @@
               </h3>
               <p>
                 A public dataset of \(3\cdot10^{10}\) samples across \(3\cdot10^4\)
-                unique robot morphologies, generated solely from forward kinematics
+                unique robot morphologies, generated solely from forward kinematics and self-collision queries,
                 with pose sampling restricted to geometrically plausible regions.
               </p>
             </div>
@@ -279,9 +301,9 @@
                 <span style="display:inline-block; padding-left:1.3em;">Trajectory Optimisation</span>
               </h3>
               <p>
-                RAM's differentiability enables gradient-based morphology and
-                trajectory optimisation at one and two orders of magnitude lower
-                computational cost respectively compared to numerical inverse kinematics.
+                RAM's differentiability and speed accelerate morphology and trajectory
+                optimisation by one to two orders of magnitude compared to numerical
+                inverse kinematics.
               </p>
             </div>
           </div>
@@ -328,7 +350,7 @@
           </div>
           <div class="column is-one-quarter has-text-centered">
             <p class="heading">Dataset Size</p>
-            <p class="title is-3">202 GB</p>
+            <p class="title is-3">204 GB</p>
           </div>
           <div class="column is-one-quarter has-text-centered">
             <p class="heading">GPU Hours (H100)</p>
@@ -366,11 +388,11 @@
             <div class="box contribution-box pipeline-trigger" data-slide-index="2" style="cursor: pointer;">
               <h3 class="title is-5"><i class="fas fa-tag"></i> Reachability Label</h3>
               <p>
-                \(SE(3)\) is discretised into cubic \(\mathbb{R}^3\) voxels and
-                \(SO(3)\) Voronoi cells. Joint configurations are sampled
-                via forward kinematics to mark cells reachable, achieving an
-                \(F_1\)-score of 91% against analytical reference labels at the chosen
-                resolution — a practical ceiling for RAM training.
+                \(SE(3)\) is discretised into cubic \(\mathbb{R}^3\) cells and
+                \(SO(3)\) cells from a tessellation of the 600-cell. Collision-free joint
+                configurations are sampled via forward kinematics to mark cells reachable,
+                yielding labels with an expected balanced accuracy of 87% against
+                inverse kinematics references — a practical ceiling for RAM.
               </p>
             </div>
           </div>
@@ -426,7 +448,9 @@
           <p class="has-text-justified" style="margin-top:1rem;">
             <strong>Workspace slices.</strong> A fixed-orientation cross-section through a representative workspace,
             showing ground-truth labels, RAM's prediction, and the GGIK baseline. RAM closely tracks the
-            ground-truth boundary while GGIK produces a blurrier, over-smoothed approximation.
+            ground-truth boundary while GGIK produces a blurrier, over-smoothed approximation. Most of RAM's errors
+            are false positives at the boundary, a slight dilation inherited from the over-approximating training
+            labels.
           </p>
         </div>
 
@@ -443,46 +467,56 @@
                   <th>Classifier</th>
                   <th>Training (h)</th>
                   <th>Inference (s)</th>
-                  <th>\(F_1\) Random (%)</th>
-                  <th>\(F_1\) Boundary (%)</th>
+                  <th>Balanced Acc. Random (%)</th>
+                  <th>Balanced Acc. Boundary (%)</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td><strong>RAM (ours)</strong></td>
-                  <td><strong>57</strong></td>
-                  <td><strong>\(5.7 \cdot 10^{-8}\)</strong></td>
-                  <td><strong>\(86^{+1}_{-1}\)</strong></td>
-                  <td><strong>\(78^{+3}_{-3}\)</strong></td>
+                  <td><strong>21</strong></td>
+                  <td><strong>\(1.5 \cdot 10^{-7}\)</strong></td>
+                  <td><strong>\(84^{+0}_{-0}\)</strong></td>
+                  <td><strong>\(72^{+1}_{-1}\)</strong></td>
                 </tr>
                 <tr>
                   <td>GGIK</td>
                   <td>756</td>
                   <td>\(2.2 \cdot 10^{-2}\)</td>
-                  <td>\(72^{+1}_{-1}\)</td>
-                  <td>\(69^{+3}_{-2}\)</td>
+                  <td>\(69\)</td>
+                  <td>\(62^{+1}_{-1}\)</td>
                 </tr>
               </tbody>
             </table>
           </div>
           <p class="has-text-centered" style="margin-top:0.75rem;">
-            RAM outperforms GGIK by 14% in \(F_1\)-score while reducing inference time by
-            <strong>more than five orders of magnitude</strong>, training in 57 hours versus one month.
+            RAM outperforms GGIK by 15 percentage points in balanced accuracy on random poses and by 10 on boundary
+            poses. Even GGIK's isolated model query (83&nbsp;µs) is <strong>about three orders of magnitude
+            slower</strong>, and RAM trains in less than a day versus roughly a month.
           </p>
         </div>
 
         <!-- Out-of-distribution note -->
         <div class="content has-text-justified" style="margin-top:1.5rem;">
           <p>
-            <strong>Generalisation.</strong> Evaluated out-of-distribution on morphologies with 1–4, 8, and 9 DoF,
-            RAM maintains \(F_1\)-scores above 78% for four, eight, and nine DoF, demonstrating robust
-            generalisation beyond its training range of 5–7 DoF. Performance drops substantially below four DoF,
-            where workspace topology is fundamentally different from the training distribution.
+            <strong>Out-of-distribution generalisation.</strong> Evaluated on morphologies with 1–4, 8, and 9 DoF
+            and on spherical wrists, RAM roughly maintains its in-distribution balanced accuracy for three and four
+            DoF and for spherical wrists, with four DoF even exceeding it by 4 percentage points. For one and two
+            DoF, whose workspaces are lower-dimensional submanifolds of \(SE(3)\), RAM fails gracefully by
+            predominantly predicting unreachable, while accuracy degrades more gradually towards eight and nine DoF.
+          </p>
+          <p>
+            <strong>Cost of generalisation.</strong> Compared with reachability maps and RAMs trained on a single
+            morphology, the 16-percentage-point gap to perfect balanced accuracy decomposes into 13 points from
+            label quality, 1 point from the neural approximation, and only 2 points from generalising across
+            morphologies.
           </p>
           <p>
             <strong>Latent space.</strong> Across principal components of the LSTM latent space, DoF shows the
-            highest Spearman correlation (86%), followed by the standard deviation of link lengths (58%),
-            indicating the representation organises itself by kinematic complexity.
+            highest Spearman correlation (87%), followed by the fraction of reachable poses (65%). Latent distances
+            correlate more strongly with workspace distances (49%) than with kinematic parameter distances (38%),
+            indicating that the encoder organises morphologies by their reachability rather than by their
+            parameters alone.
           </p>
         </div>
 
@@ -498,8 +532,8 @@
       <div class="container is-max-desktop">
         <h2 class="title is-3 has-text-centered">Applications</h2>
         <p class="subtitle has-text-centered">
-          RAM's differentiability and nanosecond inference unlock gradient-based optimisation
-          that was previously bottlenecked by numerical inverse kinematics.
+          Replacing numerical inverse kinematics with RAM trades a modest amount of solution quality for
+          large speed-ups, with both gradient-based (Adam) and gradient-free (CMA-ES) optimisers.
         </p>
 
         <div class="columns" style="margin-top:1.5rem;">
@@ -514,11 +548,10 @@
               <!-- <img src="static/images/morphology_opt.png" alt="Morphology optimisation result" style="width:100%;height:auto;border-radius:6px;" /> -->
               <div class="content has-text-justified" style="margin-top:1rem;">
                 <p>
-                  Gradient-based optimisation of link lengths and offsets to maximise reachability
-                  of task poses. RAM reduces mean pose error by <strong>78%</strong>
-                  (vs. 69% for IK baseline) while running consistently
-                  <strong> one order of magnitude faster</strong>.
-                  Both methods reduce self-collisions from 16% to 6%.
+                  Link lengths and offsets of 1000 six-DoF morphologies are optimised to reach 100 task
+                  poses each. RAM is <strong>7× faster with Adam and 21× faster with CMA-ES</strong>,
+                  at the cost of 8 and 9 percentage points of reached poses, respectively.
+                  Under Adam, RAM even reduces self-collisions more than the IK baseline.
                 </p>
               </div>
             </div>
@@ -535,10 +568,9 @@
               <div class="content has-text-justified" style="margin-top:1rem;">
                 <p>
                   Waypoints on a nominal trajectory are perturbed in \(SE(3)\) tangent space
-                  to improve reachability. RAM reduces pose error by <strong>62%</strong>
-                  and self-collisions from 10% to 4%, while running
-                  <strong>more than two orders of magnitude faster</strong> than the
-                  implicit-differentiation IK baseline.
+                  to improve reachability. RAM is <strong>22× faster with Adam and 60× faster with
+                  CMA-ES</strong> than the implicit-differentiation IK baseline, at the cost of 4 and 8
+                  percentage points of reached poses and larger deviations from the nominal trajectory.
                 </p>
               </div>
             </div>
@@ -571,14 +603,13 @@
             <span class="copy-text">Copy</span>
           </button>
         </div>
-        <pre id="bibtex-code"><code>@misc{walter2026ramreachabilitymorphologies,
-      title={RAM: Reachability Across Morphologies}, 
-      author={Tim Walter and Xinyu Chen and Jonathan Külz and Matthias Althoff},
-      year={2026},
-      eprint={2606.09108},
-      archivePrefix={arXiv},
-      primaryClass={cs.RO},
-      url={https://arxiv.org/abs/2606.09108}, 
+        <pre id="bibtex-code"><code>@inproceedings{
+RAM,
+title={{RAM}: Reachability Across Morphologies},
+author={Walter, Tim and Chen, Xinyu and K{\"u}lz, Jonathan and Althoff, Matthias},
+booktitle={10th Annual Conference on Robot Learning},
+year={2026},
+url={https://arxiv.org/abs/2606.09108}
 }</code></pre>
       </div>
     </section>
