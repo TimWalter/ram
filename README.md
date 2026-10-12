@@ -4,7 +4,7 @@
 
 **Tim Walter**<sup>1</sup>, **Xinyu Chen**<sup>2</sup>, **Jonathan Külz**<sup>1</sup>, **Matthias Althoff**<sup>1</sup>
 
-<sup>1</sup>Technical University of Munich, <sup>2</sup>University of Hamburg
+<sup>1</sup>Technical University of Munich, <sup>2</sup>German Electron Synchrotron (DESY) & University of Hamburg
 
 **CoRL 2026**
 
@@ -23,7 +23,7 @@
 
 ## Abstract
 
-Many stages of the robotic lifecycle, from morphology synthesis to operation, rely fundamentally on the reachable workspace. However, current methods for approximating workspaces are slow, imprecise, or tied to a single morphology. We introduce Reachability Across Morphologies (RAM): a morphology-conditioned, implicit neural representation that acts as a fast, differentiable surrogate for pose reachability, generalising to unseen morphologies while inherently accounting for self-collisions. To train RAM, we publish a large-scale dataset of 3·10<sup>10</sup> samples generated solely from forward kinematics. Experiments show that our model achieves an F<sub>1</sub>-score of 86% at nanosecond inference, outperforming the baseline by 14% while reducing inference time by three orders of magnitude. We further demonstrate speed-ups of one and two orders of magnitude for gradient-based morphology and trajectory optimisation, respectively.
+Many stages of the robotic lifecycle, from morphology synthesis to operation, rely fundamentally on the reachable workspace. However, current methods for approximating workspaces are slow, imprecise, or tied to a single morphology. We introduce Reachability Across Morphologies (RAM): a morphology-conditioned, implicit neural representation that acts as a fast, differentiable surrogate for pose reachability, generalising to unseen morphologies while inherently accounting for self-collisions. RAM is trained on a large-scale dataset of 3·10<sup>10</sup> samples generated solely from forward kinematics, which we publish alongside the model. Experiments show that RAM reaches 84% balanced accuracy at nanosecond inference, 15 percentage points higher than a generative inverse kinematics baseline that also generalises across morphologies, while running three orders of magnitude faster. This speed carries over to downstream tasks, accelerating morphology and trajectory optimisation by one to two orders of magnitude.
 
 ## Installation
 
@@ -85,10 +85,6 @@ The splits are then addressed as `RAM/train`, `RAM/val`, etc. (e.g. `--training_
 
 **Globus.** Alternatively, download via [Globus](https://app.globus.org/file-manager?origin_id=fcf7ca2e-cd91-45fb-8252-c53fe972e4d2&origin_path=%2Fram%2F) and place the sets under `data/` (e.g. `data/train`, `data/val`).
 
-- **Morphologies** are sampled via hierarchical rejection sampling over modified Denavit-Hartenberg parameters.
-- **Poses** are sampled uniformly from the geometrically plausible region around the first joint.
-- **Labels** are obtained by discretising SE(3) into ℝ³ voxels and SO(3) Voronoi cells and marking cells reachable via forward kinematics (training set) or inverse kinematics (evaluation sets).
-
 To generate data yourself:
 
 ```bash
@@ -118,17 +114,7 @@ Trained models are stored in `data/trained_models/` and can be loaded with `Mode
 
 ## Reproducing the paper
 
-All experiments of the paper (label validity, representation accuracy vs. GGIK, boundary accuracy, generalisation, cost of generalisation, morphology and trajectory optimisation, ablations, and figures) are in `paper_archive/` on the [`CoRL2026`](https://github.com/TimWalter/ram/tree/CoRL2026) branch, organised by research question:
-
-```
-paper_archive/
-├── RQ1/        # Validity of the reachability labels
-├── RQ2/        # Representation accuracy, boundary accuracy, generalisation, cost of generalisation
-├── RQ3/        # Morphology and trajectory optimisation
-├── ablations/  # Discretisation and transformer-encoder ablations
-├── hero/       # Figures
-└── video/      # Video assets
-```
+All experiments of the paper are in `paper_archive/` on the [`CoRL2026`](https://github.com/TimWalter/ram/tree/CoRL2026) branch, organised by research question.                   # Video assets
 
 The GGIK baseline is included as a git submodule; clone with `git clone --recurse-submodules -b CoRL2026 https://github.com/TimWalter/ram.git`.
 
